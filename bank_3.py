@@ -1,40 +1,49 @@
-import threading
-from threading import Thread
+from threading import Thread, Lock
+"""Создаём программу, имитирующую банковский счёт с балансом
+и методами для пополнения и снятия денег"""
 
+class BankAccount():
+    def __init__(self, balance):
+        self.balance = balance  # баланс счёта
+        self.lock = Lock()   # механизм блокировки потоков
 
-
-
-class BankAccount(Thread):
-    def __init__(self, amount, *args, **kwargs):
-        super(BankAccount, self).__init__(*args, **kwargs)
-        self.amount = amount
-
-# метод пополнения баланса:
-    def deposit_task(amount):
+    # метод пополнения баланса:
+    def deposit_task(self, amount):
         balance = 1000
+        with self.lock:  # механизм блокировки потока
+            for i in range(5): # добавляем amount = 100 пять раз
+                balance = int(balance + amount)  # balance = 1000, amount = 100
+                print(f"Deposited {amount}, new balance is {balance}")
 
-        for i in range(5):
-            balance = int(balance + amount)
-            print(f"Deposited {amount}, new balance is {balance}")
-
-# метод снятия денег:
-    def withdraw_task(amount):
+    # метод снятия денег:
+    def withdraw_task(self, amount):
         balance = 1500
+        with self.lock: # механизм блокировки потока
+            for i in range(5):
+                balance = int(balance - amount)
+                print(f"Withdrew {amount}, new balance is {balance}")
 
-        for i in range(5):
-            balance = int(balance - amount)
-            print(f"Withdrew {amount}, new balance is {balance}")
+
+
+# создаём отдельные методы в глобальном пространстве, чтобы сработали отдельные потоки на отдельные методы,
+# а именно, чтобы сработали отдельные потоки на методы deposit_task и withdraw_task
+def deposit_task(account, amount):
+    account.deposit_task(amount)
+
+
+def withdraw_task(account, amount):
+    account.withdraw_task(amount)
+
+# создаём переменную account, которая фигурирует в экземплярах класса deposit_thread и withdraw_thread
+account = BankAccount(1000)
 
 # Вызвать метод deposit_task в одном потоке
-deposit_thread = BankAccount(target=deposit_task)
+deposit_thread = Thread(target=deposit_task, args=(account, 100))
 # Вызвать метод withdraw_task в другом потоке
-withdraw_thread = BankAccount(amount=150)
+withdraw_thread = Thread(target=withdraw_task, args=(account, 150))
 
 deposit_thread.start()
 withdraw_thread.start()
 
 deposit_thread.join()
 withdraw_thread.join()
-
-# количество потоков:
-print(threading.active_count())
