@@ -1,28 +1,29 @@
 from threading import Thread, Lock
+
 """Создаём программу, имитирующую банковский счёт с балансом
 и методами для пополнения и снятия денег"""
+
 
 class BankAccount():
     def __init__(self, balance):
         self.balance = balance  # баланс счёта
-        self.lock = Lock()   # механизм блокировки потоков
+        self.lock = Lock()  # механизм блокировки потоков
 
     # метод пополнения баланса:
     def deposit_task(self, amount):
-        balance = 1000
+        self.balance = 1000
         with self.lock:  # механизм блокировки потока
-            for i in range(5): # добавляем amount = 100 пять раз
-                balance = int(balance + amount)  # balance = 1000, amount = 100
-                print(f"Deposited {amount}, new balance is {balance}")
+            for i in range(5):  # добавляем amount = 100 пять раз
+                self.balance = self.balance + amount  # balance = 1000, amount = 100
+                print(f"Deposited {amount}, new balance is {self.balance}")
 
     # метод снятия денег:
     def withdraw_task(self, amount):
-        balance = 1500
-        with self.lock: # механизм блокировки потока
-            for i in range(5):
-                balance = int(balance - amount)
-                print(f"Withdrew {amount}, new balance is {balance}")
 
+        with self.lock:  # механизм блокировки потока
+            for i in range(5):
+                self.balance = self.balance - amount
+                print(f"Withdrew {amount}, new balance is {self.balance}")
 
 
 # создаём отдельные методы в глобальном пространстве, чтобы сработали отдельные потоки на отдельные методы,
@@ -33,6 +34,7 @@ def deposit_task(account, amount):
 
 def withdraw_task(account, amount):
     account.withdraw_task(amount)
+
 
 # создаём переменную account, которая фигурирует в экземплярах класса deposit_thread и withdraw_thread
 account = BankAccount(1000)
